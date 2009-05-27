@@ -1,10 +1,10 @@
-= Xapit Proxy
+= Xapit Server
 
 IMPORTANT: This project is currently vaporware.
 
-For an alternative solution (also currently vaporware) see Xapit Reloader.
+For an alternative solution (also currently vaporware) see Xapit Sync.
 
-http://github.com/ryanb/xapit-reloader/tree/master
+http://github.com/ryanb/xapit-sync/tree/master
 
 
 == Xapit
@@ -16,16 +16,16 @@ http://github.com/ryanb/xapit/tree/master
 
 == How it Works
 
-Xapit Proxy provides a Rack application which hosts a writable Xapian database and allows interaction through a REST API. Xapit will use this remote database for all search queries and record updates.
+Xapit Server provides a Rack application which hosts a writable Xapian database and allows interaction through a REST API. Xapit will use this remote database for all search queries and record updates.
 
 There are several advantages to this solution.
 
-* all records will be updated instantly so you do not have to worry about keeping track of model changes and reloading the database.
+* all records will be updated instantly so you do not have to worry about syncing the database.
 * the database is only loaded into memory once, not separately for each Rails process. This is very important if you have a large database.
 * allows the Xapian database to be stored on a separate machine than the application.
 * completely independent of Rails, so you can use it with other Ruby applications.
 
-Here are some disadvantages when compared to Xapit Reloader.
+Here are some disadvantages when compared to Xapit Sync.
 
 * additional security issues (if Rack server is exposed).
 * requires a separate daemon process to constantly be running (and monitored).
@@ -39,18 +39,18 @@ Here are some disadvantages when compared to Xapit Reloader.
 To use this plugin you simply have to setup a rack server. If you are using Phusion Passenger it may look like this.
 
   <VirtualHost *:80>
-    ServerName xapit-proxy.example.com
-    DocumentRoot /path/to/xapit-proxy/server/public
+    ServerName xapit-server.example.com
+    DocumentRoot /path/to/xapit-server/public
   </VirtualHost>
 
 
 Then configure Xapit to use this server by passing the URL to the database path.
 
   # in config/initializers/setup_xapit.rb
-  Xapit::Config.setup(:database_path => "http://xapit-proxy.example.com")
+  Xapit::Config.setup(:database_path => "http://xapit-server.example.com")
 
 
 == Implementation
 
-This solution requires a more complex implementation than Xapit Reloader. Not all Xapian classes are easily serialized. This may require Xapit to take extra steps to minimize the amount of traffic to the REST API.
+This solution requires a more complex implementation than Xapit Sync. Not all Xapian classes are easily serialized. This may require Xapit to take extra steps to minimize the amount of traffic to the REST API.
 
