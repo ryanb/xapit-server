@@ -2,7 +2,7 @@
 
 IMPORTANT: This project is currently vaporware.
 
-For an alternative solution (also currently vaporware) see Xapit Sync.
+For an alternative solution see Xapit Sync.
 
 http://github.com/ryanb/xapit-sync/tree/master
 
@@ -54,3 +54,43 @@ Then configure Xapit to use this server by passing the URL to the database path.
 
 This solution requires a more complex implementation than Xapit Sync. Not all Xapian classes are easily serialized. This may require Xapit to take extra steps to minimize the amount of traffic to the REST API.
 
+=== Commands
+
+Here are some ideas on how the REST api will work.
+
+==== POST /documents
+
+Create a new document index using the POST attributes.
+
+* id: any unique string value to identify this record.
+* terms: a comma separated list of terms. Weight for each will be "1".
+* terms_with_weight: a comma separated list of terms and their weight. "kangaroo,1,galexy,2"
+* values: a comma separated list of values.
+* spellings: a comma separated list of spellings to add along with the document. There is another interface to add spellings but this is for convenience.
+
+==== PUT /documents/:id
+
+Update an existing document index. The attributes passed are the same as creating a document except the +id+ attribute is not allowed.
+
+==== DELETE /documents/:id
+
+Deletes the document matching that id.
+
+==== GET /documents
+
+Pass in a query and get a list of matching document ids and percentages in response.
+
+* query: serialized Xapian::Query
+* sort: a comma separated list of values to sort by
+* descending: to sort in descending order (true/false)
+* offset: where to start the fetching
+* limit: how many documents to fetch
+* collapse_key: the key to collapse
+
+==== POST /spellings
+
+* spellings: a comma separated list of terms to add to the spelling dictionary.
+
+==== GET /spellings
+
+Returns spellings suggestions given a term.
