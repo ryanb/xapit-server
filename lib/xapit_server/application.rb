@@ -13,6 +13,7 @@ module XapitServer
       case "#{request.request_method} #{request.path}"
       when "POST /documents" then add_document(request.params)
       when %r{DELETE /documents/(.+)} then delete_document($1)
+      when %r{PUT /documents/(.+)} then update_document($1, request.params)
       when %r{.+ /queries$} then query_documents(request.params)
       else [404, {"Content-Type" => "text/plain"}, ["Not Found"]]
       end
@@ -21,19 +22,19 @@ module XapitServer
     private
     
     def add_document(params)
-      raise "id parameter should be passed when creating document" if params["id"].nil?
-      document = Xapian::Document.new
-      document.data = params["id"]
-      document.add_term("Q" + params["id"])
-      (params["terms"] || "").split(",").each do |term|
-        document.add_term(term)
-      end
+      document = generate_document(params)
       database.add_document(document)
       [200, {"Content-Type" => "text/plain"}, [""]]
     end
     
     def delete_document(id)
       database.delete_document("Q" + id)
+      [200, {"Content-Type" => "text/plain"}, [""]]
+    end
+    
+    def update_document(id, params)
+      document = generate_document({"id" => id}.merge(params))
+      database.replace_document("Q#{id}", document)
       [200, {"Content-Type" => "text/plain"}, [""]]
     end
     
@@ -44,6 +45,17 @@ module XapitServer
         match.document.data
       end
       [200, {"Content-Type" => "text/plain"}, [docs.join(",")]]
+    end
+    
+    def generate_document(params)
+      raise "id parameter should be passed when creating document" if params["id"].nil?
+      document = Xapian::Document.new
+      document.data = params["id"]
+      document.add_term("Q" + params["id"])
+      (params["terms"] || "").split(",").each do |term|
+        document.add_term(term)
+      end
+      document
     end
   end
 end

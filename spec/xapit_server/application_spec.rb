@@ -25,6 +25,13 @@ describe XapitServer::Application do
   it "should fetch document given terms" do
     query = Xapian::Query.new("baz")
     @request.post("/documents", :params => {:id => "foo", :terms => "bar,baz"})
-    @request.post("/queries", :params => {:query => query.serialise}).body.should include("foo")
+    @request.post("/queries", :params => {:query => query.serialise}).body.should == "foo"
+  end
+  
+  it "should update document with options" do
+    query = Xapian::Query.new("test")
+    @request.post("/documents", :params => {:id => "foo", :terms => "bar,baz"})
+    @request.put("/documents/foo", :params => {:terms => "test"})
+    @request.post("/queries", :params => {:query => query.serialise}).body.should == "foo"
   end
 end
