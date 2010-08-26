@@ -16,9 +16,15 @@ describe XapitServer::Application do
     @app.database.doccount.should == 1
   end
   
-  it "should add a document to the database and remove it" do
+  it "should remove document from database" do
     @request.post("/documents", :params => {:id => "foo"})
     @request.delete("/documents/foo")
     @app.database.doccount.should == 0
+  end
+  
+  it "should fetch document given terms" do
+    query = Xapian::Query.new("baz")
+    @request.post("/documents", :params => {:id => "foo", :terms => "bar,baz"})
+    @request.post("/queries", :params => {:query => query.serialise}).body.should include("foo")
   end
 end
