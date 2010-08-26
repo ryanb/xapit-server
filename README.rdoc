@@ -76,9 +76,9 @@ Update an existing document index. The attributes passed are the same as creatin
 
 Deletes the document matching that id.
 
-==== GET /documents
+==== POST /queries
 
-Pass in a query and get a list of matching document ids and percentages in response.
+Pass in a query and get a list of matching document ids and percentages in response. While this technically should be a GET request since nothing changes on the server, the query parameter may be very long, so a POST request is necessary.
 
 * query: serialized Xapian::Query
 * sort: a comma separated list of values to sort by
