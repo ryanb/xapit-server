@@ -39,4 +39,8 @@ describe XapitServer::Application do
     @request.post("/documents", :params => {:id => "foo", :data => "bar"})
     @request.get("/documents/foo").body.should == "bar"
   end
+  
+  it "should return 404 when no document found" do
+    @request.get("/documents/bar").status.should == 404
+  end
 end

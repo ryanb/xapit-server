@@ -16,7 +16,7 @@ module XapitServer
       when %r{DELETE /documents/(.+)} then delete_document($1)
       when %r{PUT /documents/(.+)} then update_document($1, request.params)
       when %r{.+ /queries$} then query_documents(request.params)
-      else [404, {"Content-Type" => "text/plain"}, ["Not Found"]]
+      else render_404
       end
     end
     
@@ -31,8 +31,13 @@ module XapitServer
     def fetch_document(id)
       enquire = Xapian::Enquire.new(database)
       enquire.query = Xapian::Query.new("Q#{id}")
-      id, data = enquire.mset(0, 500).matches.first.document.data.split("|DATA|")
-      [200, {"Content-Type" => "text/plain"}, [data]]
+      match = enquire.mset(0, 500).matches.first
+      if match
+        id, data = match.document.data.split("|DATA|")
+        [200, {"Content-Type" => "text/plain"}, [data]]
+      else
+        render_404
+      end
     end
     
     def delete_document(id)
@@ -64,6 +69,10 @@ module XapitServer
         document.add_term(term)
       end
       document
+    end
+    
+    def render_404
+      [404, {"Content-Type" => "text/plain"}, ["Not Found"]]
     end
   end
 end
