@@ -12,6 +12,7 @@ module XapitServer
       request = Rack::Request.new(env)
       case "#{request.request_method} #{request.path}"
       when "POST /documents" then add_document(request.params)
+      when %r{GET /documents/(.+)} then fetch_document($1)
       when %r{DELETE /documents/(.+)} then delete_document($1)
       when %r{PUT /documents/(.+)} then update_document($1, request.params)
       when %r{.+ /queries$} then query_documents(request.params)
@@ -25,6 +26,13 @@ module XapitServer
       document = generate_document(params)
       database.add_document(document)
       [200, {"Content-Type" => "text/plain"}, [""]]
+    end
+    
+    def fetch_document(id)
+      enquire = Xapian::Enquire.new(database)
+      enquire.query = Xapian::Query.new("Q#{id}")
+      id, data = enquire.mset(0, 500).matches.first.document.data.split("|DATA|")
+      [200, {"Content-Type" => "text/plain"}, [data]]
     end
     
     def delete_document(id)
@@ -42,7 +50,7 @@ module XapitServer
       enquire = Xapian::Enquire.new(database)
       enquire.query = Xapian::Query.unserialise(params["query"])
       docs = enquire.mset(0, 500).matches.map do |match|
-        match.document.data
+        match.document.data.split("|DATA|").first
       end
       [200, {"Content-Type" => "text/plain"}, [docs.join(",")]]
     end
@@ -50,8 +58,8 @@ module XapitServer
     def generate_document(params)
       raise "id parameter should be passed when creating document" if params["id"].nil?
       document = Xapian::Document.new
-      document.data = params["id"]
-      document.add_term("Q" + params["id"])
+      document.data = "#{params['id']}|DATA|#{params['data']}"
+      document.add_term("Q#{params['id']}")
       (params["terms"] || "").split(",").each do |term|
         document.add_term(term)
       end

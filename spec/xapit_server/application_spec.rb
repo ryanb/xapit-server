@@ -34,4 +34,9 @@ describe XapitServer::Application do
     @request.put("/documents/foo", :params => {:terms => "test"})
     @request.post("/queries", :params => {:query => query.serialise}).body.should == "foo"
   end
+  
+  it "should fetch the document data" do
+    @request.post("/documents", :params => {:id => "foo", :data => "bar"})
+    @request.get("/documents/foo").body.should == "bar"
+  end
 end

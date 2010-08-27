@@ -64,9 +64,15 @@ Create a new document index using the POST attributes.
 
 * id: any unique string value to identify this record.
 * terms: a comma separated list of terms. Weight for each will be "1".
-* terms_with_weight: a comma separated list of terms and their weight. "kangaroo,1,galexy,2"
+* data: custom data to fetch through the show action
+* weights: a comma separated list of weights which should parallel terms.
 * values: a comma separated list of values.
+* value_indexes: a comma separated list of value indexes, defaults to incrementing numbers starting with zero.
 * spellings: a comma separated list of spellings to add along with the document. There is another interface to add spellings but this is for convenience.
+
+==== GET /documents/:id
+
+Returns the custom data stored in the document at the given id.
 
 ==== PUT /documents/:id
 
