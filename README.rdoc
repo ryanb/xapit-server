@@ -1,62 +1,60 @@
 = Xapit Server
 
-IMPORTANT: This project is currently vaporware.
+A central Rack application to interact with a Xapian database. This way your data stays in sync without needing to update the readable databases on each instance.
 
-For an alternative solution see Xapit Sync.
-
-http://github.com/ryanb/xapit-sync/tree/master
+This is intended to be used through the {Xapit gem}[http://github.com/ryanb/xapit/tree/master].
 
 
-== Xapit
+== Pros & Cons
 
-Xapit is a Ruby library for interacting with Xapian, a full-text search engine.
+Compared to {Xapit Sync}[http://github.com/ryanb/xapit-sync/tree/master]
 
-http://github.com/ryanb/xapit/tree/master
-
-
-== How it Works
-
-Xapit Server provides a Rack application which hosts a writable Xapian database and allows interaction through a REST API. Xapit will use this remote database for all search queries and record updates.
-
-There are several advantages to this solution.
+=== Pros
 
 * all records will be updated instantly so you do not have to worry about syncing the database.
-* the database is only loaded into memory once, not separately for each Rails process. This is very important if you have a large database.
-* allows the Xapian database to be stored on a separate machine than the application.
-* completely independent of Rails, so you can use it with other Ruby applications.
+* the database is only loaded into memory once, not separately for each Rails instance. This is very important if you have a large database.
+* allows the Xapian database to be stored on a separate machine or network than the application.
+* does not require Rails.
 
-Here are some disadvantages when compared to Xapit Sync.
+=== Cons
 
 * additional security issues (if Rack server is exposed).
 * requires a separate daemon process to constantly be running (and monitored).
 * more overall traffic to/from the external process.
-* greater overhead to perform search requests.
 * more difficult to test in staging/development.
 
 
 == Setup
 
-To use this plugin you simply have to setup a rack server. If you are using Phusion Passenger it may look like this.
+To use Xapit Server you will need to set up a Rackup file like this.
 
-  <VirtualHost *:80>
-    ServerName xapit-server.example.com
-    DocumentRoot /path/to/xapit-server/public
-  </VirtualHost>
+  # config.ru
+  require "xapit_server"
+  run XapitServer::Application.new(:database_path => "/path/to/xapiandb")
 
+There are a number of webservers which can host this Rack application: Phusion Passenger, Mongrel, Thin, Unicorn, etc. I'll leave it up to you to set that up.
 
-Then configure Xapit to use this server by passing the URL to the database path.
+Once it is running, just change the Xapit database path to point to the URL of the Xapit Server.
 
   # in config/initializers/setup_xapit.rb
-  Xapit::Config.setup(:database_path => "http://xapit-server.example.com")
+  Xapit::Config.setup(:database_path => "http://locahost:12345")
+
+There is no authorization performed by Xapit Server, so be certain to restrict the port it is running on.
 
 
-== Implementation
+== Initial Data
 
-This solution requires a more complex implementation than Xapit Sync. Not all Xapian classes are easily serialized. This may require Xapit to take extra steps to minimize the amount of traffic to the REST API.
+If you already have a large set of data which needs to be indexed, running that all through Xapit Server will create a lot of overhead. Instead I recommend having Xapit go straight to the file system to populate the initial database.
 
-=== Commands
+  # in config/initializers/setup_xapit.rb
+  Xapit::Config.setup(:database_path => "/path/to/xapiandb")
 
-Here are some ideas on how the REST api will work.
+Once this is done, use that database through Xapit Server.
+
+
+== Commands
+
+Xapit Server is a REST API, here are the commands which it responds to.
 
 ==== POST /documents
 
